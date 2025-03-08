@@ -37,7 +37,7 @@ body {
 }
 
 .app-container {
-  max-width: 800px;
+  max-width: 376px;
   margin: auto;
   padding: 20px;
 }
@@ -80,6 +80,19 @@ body {
 h2 {
   margin-bottom: 10px;
 }
+
+/* Grouping by date */
+.date-group {
+  margin-bottom: 20px;
+}
+
+.date-group h3 {
+  background-color: #e0e0e0;
+  padding: 5px 10px;
+  border-radius: 3px;
+  margin-bottom: 10px;
+}
+
 
 /* Call list styling */
 .call-list {
