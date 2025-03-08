@@ -1,7 +1,6 @@
 import React from 'react';
 import {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
-import {client} from "./api/client";
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 
