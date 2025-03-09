@@ -1,12 +1,14 @@
 import React from 'react';
-import {StrictMode} from 'react';
-import {createRoot} from 'react-dom/client';
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-
+import { FaPhoneAlt } from "react-icons/fa";
+import { IconContext } from "react-icons";
 const BASE_URL = 'https://aircall-api.onrender.com';
-
-import Header from './Header.jsx';
+import { CiCircleInfo } from "react-icons/ci";
+import { RiInboxArchiveLine } from "react-icons/ri";
+import { RiInboxUnarchiveLine } from "react-icons/ri";
 
 // Helper function to group calls by date (YYYY-MM-DD) and sort each group by time.
 const groupCallsByDate = (calls) => {
@@ -111,154 +113,170 @@ const App = () => {
   if (loading) return <div>Loading calls...</div>;
   if (error) return <div>{error}</div>;
 
-   // Group calls based on the active tab.
-   const groupedData =
-   activeTab === 'feed'
-     ? groupCallsByDate(getFeedCalls())
-     : activeTab === 'archived'
-     ? groupCallsByDate(getArchivedCalls())
-     : {};
+  // Group calls based on the active tab.
+  const groupedData =
+    activeTab === 'feed'
+      ? groupCallsByDate(getFeedCalls())
+      : activeTab === 'archived'
+        ? groupCallsByDate(getArchivedCalls())
+        : {};
 
   return (
     <div className='container'>
-       <div className="app-container">
-       <Header/>
-      {/* Tabs Menu */}
-      <div className="tabs">
-        <div
-          className={`tab ${activeTab === 'feed' ? 'active' : ''}`}
-          onClick={() => {
-            setActiveTab('feed');
-            setSelectedCall(null);
-          }}
-        >
-          Activity Feed
+      <header className="header">
+        <div className="header__left">
+          <span><IconContext.Provider value={{  size: "25", color: "green"}}>
+            <FaPhoneAlt />
+          </IconContext.Provider></span>
         </div>
-        <div
-          className={`tab ${activeTab === 'archived' ? 'active' : ''}`}
-          onClick={() => {
-            setActiveTab('archived');
-            setSelectedCall(null);
-          }}
-        >
-          Archived
+        <div className="header__right">
+          <nav className="nav">
+            <ul className="nav__list">
+              <span
+                className={`nav__item  ${activeTab === 'feed' ? 'active' : ''}`}
+                onClick={() => {
+                  setActiveTab('feed');
+                  setSelectedCall(null);
+                }}
+              >
+                <a className={`nav__link  ${activeTab === 'feed' ? 'active' : ''}`}>Activity Feed</a>
+              </span>
+              <span
+                className={`nav__item ${activeTab === 'archived' ? 'active' : ''}`}
+                onClick={() => {
+                  setActiveTab('archived');
+                  setSelectedCall(null);
+                }}
+              >
+                <a className={`nav__link  ${activeTab === 'archived' ? 'active' : ''}`}>Archived</a>
+              </span>
+            </ul>
+          </nav>
+        </div>
+      </header >
+      <div className="app-container">
+
+
+        {/* Content Area */}
+        <div className="content">
+          {activeTab === 'feed' && (
+            <div className="view feed">
+              <h2>Activity Feed</h2>
+              <button className="button-action all-btn" onClick={archiveAllCalls}>
+                Archive All
+              </button>
+              {Object.keys(groupedData).length === 0 ? (
+                <p>No active calls available.</p>
+              ) : (
+                Object.keys(groupedData).map((date) => (
+                  <div key={date} className="date-group">
+                    <h3>{date}</h3>
+                    <ul className="call-list">
+                      {groupedData[date].map((call) => (
+                        <li key={call.id} className="call-item">
+                          <div className="call-info" onClick={() => viewCallDetail(call)}>
+                            <p>
+                              <strong>{call.direction}</strong> call from {call.from} to {call.to} ({call.call_type})
+                            </p>
+                            <p>
+                              {new Date(call.created_at).toLocaleTimeString()}
+                            </p>
+                          </div>
+                          <div className="actions">
+                            <button
+                              className="button-square"
+                              onClick={() => viewCallDetail(call)}
+                            >
+                             <CiCircleInfo size={25}/>
+                            </button>
+                            <button  className="button-square"
+                            onClick={() => archiveCall(call.id)}>
+                              <RiInboxArchiveLine size={25}/>
+                            </button>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+
+          {activeTab === 'archived' && (
+            <div className="view archived">
+              <h2>Archived Calls</h2>
+              <button className="button-action all-btn" onClick={unarchiveAllCalls}>
+                Unarchive All
+              </button>
+              {Object.keys(groupedData).length === 0 ? (
+                <p>No archived calls.</p>
+              ) : (
+                Object.keys(groupedData).map((date) => (
+                  <div key={date} className="date-group">
+                    <h3>{date}</h3>
+                    <ul className="call-list">
+                      {groupedData[date].map((call) => (
+                        <li key={call.id} className="call-item">
+                          <div className="call-info" onClick={() => viewCallDetail(call)}>
+                            <p>
+                              <strong>{call.direction}</strong> call from {call.from} to {call.to} ({call.call_type})
+                            </p>
+                            <p>
+                              {new Date(call.created_at).toLocaleTimeString()}
+                            </p>
+                          </div>
+                          <div className="actions">
+                          <button
+                              className="button-square"
+                              onClick={() => viewCallDetail(call)}
+                            >
+                             <CiCircleInfo size={25}/>
+                            </button>
+                            <button className="button-square" onClick={() => unarchiveCall(call.id)}>
+                            <RiInboxUnarchiveLine size={25} />
+                              </button>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+
+          {activeTab === 'detail' && selectedCall && (
+            <div className="view detail">
+              <button className="button-action back-btn" onClick={handleBack}>
+                &#8592; Back
+              </button>
+              <h2>Call Details</h2>
+              <p><strong>Direction:</strong> {selectedCall.direction}</p>
+              <p><strong>From:</strong> {selectedCall.from}</p>
+              <p><strong>To:</strong> {selectedCall.to}</p>
+              <p><strong>Call Type:</strong> {selectedCall.call_type}</p>
+              <p><strong>Duration:</strong> {selectedCall.duration} seconds</p>
+              <p><strong>Created At:</strong> {new Date(selectedCall.created_at).toLocaleString()}</p>
+              <p>
+                <strong>Archived:</strong>{' '}
+                {selectedCall.is_archived ? 'Yes' : 'No'}
+              </p>
+              <br />
+              {selectedCall.is_archived ? (
+                <button  className="button-square" onClick={() => unarchiveCall(selectedCall.id)}>
+                  <RiInboxArchiveLine size={25}/> Unarchive
+                </button>
+              ) : (
+                <button  className="button-square" onClick={() => archiveCall(selectedCall.id)}>
+                  <RiInboxUnarchiveLine size={25}/> Archive
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
-
-      {/* Content Area */}
-      <div className="content">
-        {activeTab === 'feed' && (
-          <div className="view feed">
-            <h2>Activity Feed</h2>
-            <button className="all-btn" onClick={archiveAllCalls}>
-              Archive All
-            </button>
-            {Object.keys(groupedData).length === 0 ? (
-              <p>No active calls available.</p>
-            ) : (
-              Object.keys(groupedData).map((date) => (
-                <div key={date} className="date-group">
-                  <h3>{date}</h3>
-                  <ul className="call-list">
-                    {groupedData[date].map((call) => (
-                      <li key={call.id} className="call-item">
-                        <div className="call-info" onClick={() => viewCallDetail(call)}>
-                          <p>
-                            <strong>{call.direction}</strong> call from {call.from} to {call.to} ({call.call_type})
-                          </p>
-                          <p>
-                            {new Date(call.created_at).toLocaleTimeString()}
-                          </p>
-                        </div>
-                        <div className="actions">
-                          <button
-                            className="detail-btn"
-                            onClick={() => viewCallDetail(call)}
-                          >
-                            &#10140;
-                          </button>
-                          <button onClick={() => archiveCall(call.id)}>Archive</button>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))
-            )}
-          </div>
-        )}
-
-        {activeTab === 'archived' && (
-          <div className="view archived">
-            <h2>Archived Calls</h2>
-            <button className="all-btn" onClick={unarchiveAllCalls}>
-              Unarchive All
-            </button>
-            {Object.keys(groupedData).length === 0 ? (
-              <p>No archived calls.</p>
-            ) : (
-              Object.keys(groupedData).map((date) => (
-                <div key={date} className="date-group">
-                  <h3>{date}</h3>
-                  <ul className="call-list">
-                    {groupedData[date].map((call) => (
-                      <li key={call.id} className="call-item">
-                        <div className="call-info" onClick={() => viewCallDetail(call)}>
-                          <p>
-                            <strong>{call.direction}</strong> call from {call.from} to {call.to} ({call.call_type})
-                          </p>
-                          <p>
-                            {new Date(call.created_at).toLocaleTimeString()}
-                          </p>
-                        </div>
-                        <div className="actions">
-                          <button
-                            className="detail-btn"
-                            onClick={() => viewCallDetail(call)}
-                          >
-                            &#10140;
-                          </button>
-                          <button onClick={() => unarchiveCall(call.id)}>Unarchive</button>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))
-            )}
-          </div>
-        )}
-
-        {activeTab === 'detail' && selectedCall && (
-          <div className="view detail">
-            <button className="back-btn" onClick={handleBack}>
-              &#8592; Back
-            </button>
-            <h2>Call Details</h2>
-            <p><strong>Direction:</strong> {selectedCall.direction}</p>
-            <p><strong>From:</strong> {selectedCall.from}</p>
-            <p><strong>To:</strong> {selectedCall.to}</p>
-            <p><strong>Call Type:</strong> {selectedCall.call_type}</p>
-            <p><strong>Duration:</strong> {selectedCall.duration} seconds</p>
-            <p><strong>Created At:</strong> {new Date(selectedCall.created_at).toLocaleString()}</p>
-            <p>
-              <strong>Archived:</strong>{' '}
-              {selectedCall.is_archived ? 'Yes' : 'No'}
-            </p>
-            {selectedCall.is_archived ? (
-              <button onClick={() => unarchiveCall(selectedCall.id)}>
-                Unarchive
-              </button>
-            ) : (
-              <button onClick={() => archiveCall(selectedCall.id)}>
-                Archive
-              </button>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-    </div>
+    </div >
   );
 };
 
