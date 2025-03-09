@@ -22,6 +22,10 @@ module.exports = {
         use: {
           loader: 'babel-loader'
         }
+      },
+      {
+        test: /\.(gif|svg|jpg|png)$/,  // add whatever files you wanna use within this regEx
+        use: ["file-loader"]
       }
     ]
   },

@@ -12,7 +12,7 @@ import { FaCircleUser } from "react-icons/fa6";
 import { MdDialpad } from "react-icons/md";
 import { IoIosSettings } from "react-icons/io";
 import { FaVoicemail } from "react-icons/fa";
-
+import phoneImg from "./logo.png";
 
 
 // Helper function to group calls by date (YYYY-MM-DD) and sort each group by time.
@@ -176,7 +176,7 @@ const App = () => {
       <header className="header">
         <div className="header__left">
           <div className='logo'>
-            <img src="./public/logo.png" alt="Logo" className="logo__image" />
+            <img src={phoneImg} alt="Logo" className="logo__image" />
           </div>
         </div>
         <div className="header__right">
