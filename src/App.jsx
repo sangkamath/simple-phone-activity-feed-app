@@ -41,6 +41,14 @@ const App = () => {
 
   // Fetch calls on mount
   useEffect(() => {
+    activitiesCall();
+  }, []);
+
+  // Helper to filter calls by archive status
+  const getFeedCalls = () => calls.filter(call => !call.is_archived);
+  const getArchivedCalls = () => calls.filter(call => call.is_archived);
+
+  const activitiesCall = () => {
     axios.get(`${BASE_URL}/activities`)
       .then(response => {
         setCalls(response.data);
@@ -51,17 +59,26 @@ const App = () => {
         setError('Error fetching calls');
         setLoading(false);
       });
-  }, []);
+  }
 
-  // Helper to filter calls by archive status
-  const getFeedCalls = () => calls.filter(call => !call.is_archived);
-  const getArchivedCalls = () => calls.filter(call => call.is_archived);
+  const activityCall = (id) => {
+    axios.get(`${BASE_URL}/activities/${id}`)
+      .then(response => {
+        setSelectedCall(response.data)
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Error fetching call:', err);
+        setError('Error fetching call');
+        setLoading(false);
+      });
+  }
 
   // Archive a single call
   const archiveCall = (id) => {
     axios.patch(`${BASE_URL}/activities/${id}`, { is_archived: true })
       .then(() => {
-        setCalls(calls.map(call => call.id === id ? { ...call, is_archived: true } : call));
+        activitiesCall();
       })
       .catch(err => console.error(err));
   };
@@ -70,7 +87,24 @@ const App = () => {
   const unarchiveCall = (id) => {
     axios.patch(`${BASE_URL}/activities/${id}`, { is_archived: false })
       .then(() => {
-        setCalls(calls.map(call => call.id === id ? { ...call, is_archived: false } : call));
+        activitiesCall();
+      })
+      .catch(err => console.error(err));
+  };
+
+  const archiveCallFromDetails = (id) => {
+    axios.patch(`${BASE_URL}/activities/${id}`, { is_archived: true })
+      .then(() => {
+        activityCall(id);
+      })
+      .catch(err => console.error(err));
+  };
+
+  // Unarchive a single call
+  const unarchiveCallFromDetails = (id) => {
+    axios.patch(`${BASE_URL}/activities/${id}`, { is_archived: false })
+      .then(() => {
+        activityCall(id);
       })
       .catch(err => console.error(err));
   };
@@ -81,7 +115,7 @@ const App = () => {
       axios.patch(`${BASE_URL}/activities/${call.id}`, { is_archived: true })
     ))
       .then(() => {
-        setCalls(calls.map(call => ({ ...call, is_archived: true })));
+        activitiesCall();
       })
       .catch(err => console.error(err));
   };
@@ -92,20 +126,21 @@ const App = () => {
       axios.patch(`${BASE_URL}/activities/${call.id}`, { is_archived: false })
     ))
       .then(() => {
-        setCalls(calls.map(call => ({ ...call, is_archived: false })));
+        activitiesCall();
       })
       .catch(err => console.error(err));
   };
 
   // When a call item is clicked, show details and switch to the detail view
   const viewCallDetail = (call) => {
-    setSelectedCall(call);
+    activityCall(call.id);
     setActiveTab('detail');
   };
 
   // Go back to previous view (feed or archived) from detail view
   const handleBack = () => {
     setSelectedCall(null);
+    activitiesCall();
     // Return to feed if the call is not archived; archived otherwise.
     setActiveTab(selectedCall.is_archived ? 'archived' : 'feed');
   };
@@ -125,9 +160,8 @@ const App = () => {
     <div className='container'>
       <header className="header">
         <div className="header__left">
-          <span><IconContext.Provider value={{  size: "25", color: "green"}}>
-            <FaPhoneAlt />
-          </IconContext.Provider></span>
+          <span className="button-square">
+           </span>
         </div>
         <div className="header__right">
           <nav className="nav">
@@ -264,11 +298,11 @@ const App = () => {
               </p>
               <br />
               {selectedCall.is_archived ? (
-                <button  className="button-square" onClick={() => unarchiveCall(selectedCall.id)}>
+                <button className="button-square" onClick={() => unarchiveCallFromDetails(selectedCall.id)}>
                   <RiInboxArchiveLine size={25}/> Unarchive
                 </button>
               ) : (
-                <button  className="button-square" onClick={() => archiveCall(selectedCall.id)}>
+                <button  className="button-square" onClick={() => archiveCallFromDetails(selectedCall.id)}>
                   <RiInboxUnarchiveLine size={25}/> Archive
                 </button>
               )}
